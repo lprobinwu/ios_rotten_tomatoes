@@ -19,11 +19,32 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
+//    self.scrollView.contentSize = CGSizeMake(self.scrollView.bounds.size.width, self.scrollView.bounds.size.height * 3);
+    
+    NSString *originalUrlString = self.movie[@"posters"][@"detailed"];
+    
+    NSRange range = [originalUrlString rangeOfString:@".*cloudfront.net/"
+                                             options:NSRegularExpressionSearch];
+    
+    NSString *newUrlString = [originalUrlString stringByReplacingCharactersInRange:range
+                                                                        withString:@"https://content6.flixster.com/"];
+    
+    NSURL *url = [NSURL URLWithString:newUrlString];
+
+    [self.imageView setImageWithURL:url];
+    self.imageView.clipsToBounds = YES;
+    
     self.titleLabel.text = self.movie[@"title"];
     self.synopsisLabel.text = self.movie[@"synopsis"];
+
+    CGRect frame = self.synopsisLabel.frame;
+    [self.synopsisLabel sizeToFit];
+    frame.size.height = self.synopsisLabel.frame.size.height;
+    self.synopsisLabel.frame = frame;
     
-    NSURL *url = [NSURL URLWithString:self.movie[@"posters"][@"detailed"]];
-    [self.imageView setImageWithURL:url];
+    self.scrollView.contentSize = CGSizeMake(self.scrollView.bounds.size.width, self.synopsisLabel.frame.origin.y + self.synopsisLabel.frame.size.height + 20);
+    
+    self.navigationItem.title = self.movie[@"title"];
 }
 
 - (void)didReceiveMemoryWarning {

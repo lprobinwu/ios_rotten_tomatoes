@@ -16,6 +16,10 @@
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (strong, nonatomic) NSArray *movies;
 
+@property (weak, nonatomic) IBOutlet UIView *networkErrorView;
+
+@property (nonatomic, strong) UIRefreshControl *refreshControl;
+
 @end
 
 @implementation MoviesViewController
@@ -24,13 +28,44 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    // Network Error String
+    // @"\u26A0 Network Error";
+    
+    self.refreshControl = [[UIRefreshControl alloc] init];
+    [self.refreshControl addTarget:self action:@selector(onRefresh) forControlEvents:UIControlEventValueChanged];
+    [self.tableView insertSubview:self.refreshControl atIndex:0];
+    
     self.tableView.dataSource= self;
     self.tableView.delegate = self;
     
     [self fetchMovies];
 }
 
+- (void) showNetworkError {
+    self.networkErrorView.hidden = NO;
+}
+
+- (void)onRefresh {
+    NSString *urlString =
+    @"https://gist.githubusercontent.com/timothy1ee/d1778ca5b944ed974db0/raw/489d812c7ceeec0ac15ab77bf7c47849f2d1eb2b/gistfile1.json";
+    
+    NSURL *url = [NSURL URLWithString:urlString];
+    NSURLRequest *request = [[NSURLRequest alloc] initWithURL:url];
+    
+    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+        
+        [self.refreshControl endRefreshing];
+    }];
+    
+//    [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+//        [self.refreshControl endRefreshing];
+//    }];
+    
+}
+
 - (void) fetchMovies {
+    self.networkErrorView.hidden = YES;
+    
     NSString *urlString =
     @"https://gist.githubusercontent.com/timothy1ee/d1778ca5b944ed974db0/raw/489d812c7ceeec0ac15ab77bf7c47849f2d1eb2b/gistfile1.json";
     
@@ -57,6 +92,7 @@
                                                     [self.tableView reloadData];
                                                 } else {
                                                     NSLog(@"An error occurred: %@", error.description);
+                                                    [self showNetworkError];
                                                 }
                                             }];
     [task resume];
@@ -79,7 +115,14 @@
     cell.titleLabel.text = self.movies[indexPath.row][@"title"];
     cell.synopsisLabel.text = self.movies[indexPath.row][@"synopsis"];
     
-    NSURL *url = [NSURL URLWithString:self.movies[indexPath.row][@"posters"][@"thumbnail"]];
+    NSString *originalUrlString = self.movies[indexPath.row][@"posters"][@"thumbnail"];
+    NSRange range = [originalUrlString rangeOfString:@".*cloudfront.net/"
+                                             options:NSRegularExpressionSearch];
+    NSString *newUrlString = [originalUrlString stringByReplacingCharactersInRange:range
+                                                                        withString:@"https://content6.flixster.com/"];
+    newUrlString = [newUrlString stringByReplacingOccurrencesOfString:@"_ori.jpg" withString:@"_tmb.jpg"];
+    
+    NSURL *url = [NSURL URLWithString:newUrlString];
     [cell.posterImageView setImageWithURL:url];
     
     return cell;
@@ -100,18 +143,6 @@
     MovieDetailsViewController *destViewController = (MovieDetailsViewController *) segue.destinationViewController;
     destViewController.movie = movie;
     
-//    if ([segue.identifier isEqualToString:@"showSettings"]) {
-//        NSLog(@"showSetting Seg is called");
-//        
-//        SettingViewController *destViewController = segue.destinationViewController;
-//        
-//        [destViewController initModelWithMinimum:self.tipModel.minimum
-//                                          custom:self.tipModel.custom
-//                                         maximum:self.tipModel.maximum
-//                                           theme:self.tipModel.theme
-//                                          region:self.tipModel.region];
-//        
-//    }
 }
 
 
