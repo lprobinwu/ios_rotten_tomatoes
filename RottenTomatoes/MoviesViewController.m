@@ -18,6 +18,8 @@
 
 @property (weak, nonatomic) IBOutlet UIView *networkErrorView;
 
+@property (weak, nonatomic) IBOutlet UILabel *networkErrorLabel;
+
 @property (nonatomic, strong) UIRefreshControl *refreshControl;
 
 @end
@@ -42,6 +44,10 @@
 }
 
 - (void) showNetworkError {
+    CGRect frame = self.networkErrorView.frame;
+    frame.origin.y = 60;
+    self.networkErrorView.frame = frame;
+    
     self.networkErrorView.hidden = NO;
 }
 
@@ -52,19 +58,28 @@
     NSURL *url = [NSURL URLWithString:urlString];
     NSURLRequest *request = [[NSURLRequest alloc] initWithURL:url];
     
-    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        
-        [self.refreshControl endRefreshing];
-    }];
-    
-//    [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+//    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+//        
 //        [self.refreshControl endRefreshing];
 //    }];
     
+    NSURLSession *session = [NSURLSession sharedSession];
+    NSURLSessionDataTask *task = [session dataTaskWithRequest:request
+                                            completionHandler:
+                                  ^(NSData *data, NSURLResponse *response, NSError *error) {
+                                      [self.refreshControl endRefreshing];
+                                  }];
+    
+    [task resume];
 }
 
 - (void) fetchMovies {
     self.networkErrorView.hidden = YES;
+    
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]initWithFrame:CGRectMake(135,140,50,50)];
+    spinner.color = [UIColor blueColor];
+    [spinner startAnimating];
+    [self.view addSubview:spinner];
     
     NSString *urlString =
     @"https://gist.githubusercontent.com/timothy1ee/d1778ca5b944ed974db0/raw/489d812c7ceeec0ac15ab77bf7c47849f2d1eb2b/gistfile1.json";
@@ -89,9 +104,14 @@
                                                                                       error:&jsonError];
                                                     NSLog(@"Response: %@", responseDictionary);
                                                     self.movies = responseDictionary[@"movies"];
+                                                    
+                                                    [spinner removeFromSuperview];
+                                                    
                                                     [self.tableView reloadData];
                                                 } else {
                                                     NSLog(@"An error occurred: %@", error.description);
+                                                    [spinner removeFromSuperview];
+                                                    
                                                     [self showNetworkError];
                                                 }
                                             }];

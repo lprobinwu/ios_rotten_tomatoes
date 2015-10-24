@@ -34,9 +34,11 @@
     [self.imageView setImageWithURL:url];
     self.imageView.clipsToBounds = YES;
     
-    self.titleLabel.text = self.movie[@"title"];
+    self.titleLabel.text = [NSString stringWithFormat:@"%@ (%@)", self.movie[@"title"], self.movie[@"year"]];
     self.synopsisLabel.text = self.movie[@"synopsis"];
-
+    self.scoreLabel.text = [NSString stringWithFormat:@"Critics: %@, Audience: %@", self.movie[@"ratings"][@"critics_score"], self.movie[@"ratings"][@"audience_score"] ];
+    self.ratingLabel.text = self.movie[@"mpaa_rating"];
+    
     CGRect frame = self.synopsisLabel.frame;
     [self.synopsisLabel sizeToFit];
     frame.size.height = self.synopsisLabel.frame.size.height;
