@@ -10,17 +10,9 @@
 #import "MoviesTableViewCell.h"
 #import "MovieDetailsViewController.h"
 #import "UIImageView+AFNetworking.h"
+#import "JTProgressHUD.h"
 
 @interface MoviesViewController () <UITableViewDataSource, UITableViewDelegate>
-
-@property (weak, nonatomic) IBOutlet UITableView *tableView;
-@property (strong, nonatomic) NSArray *movies;
-
-@property (weak, nonatomic) IBOutlet UIView *networkErrorView;
-
-@property (weak, nonatomic) IBOutlet UILabel *networkErrorLabel;
-
-@property (nonatomic, strong) UIRefreshControl *refreshControl;
 
 @end
 
@@ -30,15 +22,15 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    // Network Error String
-    // @"\u26A0 Network Error";
-    
     self.refreshControl = [[UIRefreshControl alloc] init];
     [self.refreshControl addTarget:self action:@selector(onRefresh) forControlEvents:UIControlEventValueChanged];
     [self.tableView insertSubview:self.refreshControl atIndex:0];
     
     self.tableView.dataSource= self;
     self.tableView.delegate = self;
+    
+    // User sees loading state while waiting for movies API
+    [JTProgressHUD showWithStyle:NO];
     
     [self fetchMovies];
 }
@@ -49,6 +41,8 @@
     self.networkErrorView.frame = frame;
     
     self.networkErrorView.hidden = NO;
+    
+    // TODO use alpha and hide the error after 3 seconds
 }
 
 - (void)onRefresh {
@@ -57,11 +51,6 @@
     
     NSURL *url = [NSURL URLWithString:urlString];
     NSURLRequest *request = [[NSURLRequest alloc] initWithURL:url];
-    
-//    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-//        
-//        [self.refreshControl endRefreshing];
-//    }];
     
     NSURLSession *session = [NSURLSession sharedSession];
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request
@@ -75,11 +64,6 @@
 
 - (void) fetchMovies {
     self.networkErrorView.hidden = YES;
-    
-    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]initWithFrame:CGRectMake(135,140,50,50)];
-    spinner.color = [UIColor blueColor];
-    [spinner startAnimating];
-    [self.view addSubview:spinner];
     
     NSString *urlString =
     @"https://gist.githubusercontent.com/timothy1ee/d1778ca5b944ed974db0/raw/489d812c7ceeec0ac15ab77bf7c47849f2d1eb2b/gistfile1.json";
@@ -105,12 +89,13 @@
                                                     NSLog(@"Response: %@", responseDictionary);
                                                     self.movies = responseDictionary[@"movies"];
                                                     
-                                                    [spinner removeFromSuperview];
+                                                    [JTProgressHUD hide];
                                                     
                                                     [self.tableView reloadData];
                                                 } else {
                                                     NSLog(@"An error occurred: %@", error.description);
-                                                    [spinner removeFromSuperview];
+                                                    
+                                                    [JTProgressHUD hide];
                                                     
                                                     [self showNetworkError];
                                                 }
@@ -143,6 +128,7 @@
     newUrlString = [newUrlString stringByReplacingOccurrencesOfString:@"_ori.jpg" withString:@"_tmb.jpg"];
     
     NSURL *url = [NSURL URLWithString:newUrlString];
+    
     [cell.posterImageView setImageWithURL:url];
     
     return cell;
@@ -162,7 +148,6 @@
     
     MovieDetailsViewController *destViewController = (MovieDetailsViewController *) segue.destinationViewController;
     destViewController.movie = movie;
-    
 }
 
 

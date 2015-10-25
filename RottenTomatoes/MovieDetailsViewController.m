@@ -11,6 +11,8 @@
 
 @interface MovieDetailsViewController ()
 
+- (void) initMovieDetailView;
+
 @end
 
 @implementation MovieDetailsViewController
@@ -19,25 +21,28 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
-//    self.scrollView.contentSize = CGSizeMake(self.scrollView.bounds.size.width, self.scrollView.bounds.size.height * 3);
+    [self initMovieDetailView];
     
+}
+
+- (void) initMovieDetailView {
+    NSString *thumbnailUrl = self.movie[@"posters"][@"thumbnail"];
+
     NSString *originalUrlString = self.movie[@"posters"][@"detailed"];
-    
     NSRange range = [originalUrlString rangeOfString:@".*cloudfront.net/"
                                              options:NSRegularExpressionSearch];
-    
     NSString *newUrlString = [originalUrlString stringByReplacingCharactersInRange:range
                                                                         withString:@"https://content6.flixster.com/"];
-    
     NSURL *url = [NSURL URLWithString:newUrlString];
-
-    [self.imageView setImageWithURL:url];
+    
+    [self.imageView setImageWithURL:url placeholderImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:thumbnailUrl]]]];
+    
     self.imageView.clipsToBounds = YES;
     
     self.titleLabel.text = [NSString stringWithFormat:@"%@ (%@)", self.movie[@"title"], self.movie[@"year"]];
-    self.synopsisLabel.text = self.movie[@"synopsis"];
     self.scoreLabel.text = [NSString stringWithFormat:@"Critics: %@, Audience: %@", self.movie[@"ratings"][@"critics_score"], self.movie[@"ratings"][@"audience_score"] ];
     self.ratingLabel.text = self.movie[@"mpaa_rating"];
+    self.synopsisLabel.text = self.movie[@"synopsis"];
     
     CGRect frame = self.synopsisLabel.frame;
     [self.synopsisLabel sizeToFit];
@@ -47,6 +52,7 @@
     self.scrollView.contentSize = CGSizeMake(self.scrollView.bounds.size.width, self.synopsisLabel.frame.origin.y + self.synopsisLabel.frame.size.height + 20);
     
     self.navigationItem.title = self.movie[@"title"];
+    
 }
 
 - (void)didReceiveMemoryWarning {

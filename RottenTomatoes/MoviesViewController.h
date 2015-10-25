@@ -10,6 +10,21 @@
 
 @interface MoviesViewController : UIViewController
 
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (strong, nonatomic) NSArray *movies;
+
+// User sees error message when there's a networking error.
+@property (weak, nonatomic) IBOutlet UIView *networkErrorView;
+@property (weak, nonatomic) IBOutlet UILabel *networkErrorLabel;
+
+// User can pull to refresh the movie list.
+@property (nonatomic, strong) UIRefreshControl *refreshControl;
+
+- (void) showNetworkError;
+
+- (void)onRefresh;
+
+- (void) fetchMovies;
 
 @end
 

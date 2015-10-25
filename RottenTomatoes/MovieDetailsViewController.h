@@ -20,7 +20,6 @@
 
 @property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
 
-
 @property (strong, nonatomic) NSDictionary *movie;
 
 @end
