@@ -87,6 +87,7 @@
                     <connections>
                         <outlet property="networkErrorLabel" destination="2tr-fX-kCB" id="8rF-hg-XoU"/>
                         <outlet property="networkErrorView" destination="Lw6-RG-Bxn" id="eDC-ap-uYL"/>
+                        <outlet property="searchBar" destination="eNh-Qg-igZ" id="Pfc-VM-qIV"/>
                         <outlet property="tableView" destination="Sef-fd-cPr" id="nXc-eL-yHR"/>
                     </connections>
                 </viewController>
@@ -169,7 +170,7 @@
         <scene sceneID="TAC-rC-kHH">
             <objects>
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="aji-3R-gFm" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="Movie" id="aBQ-jf-bnj"/>
+                    <tabBarItem key="tabBarItem" title="Movie" image="movietab" id="aBQ-jf-bnj"/>
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="UNA-iN-5jL">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
@@ -224,7 +225,7 @@
         <scene sceneID="m3h-dO-RVd">
             <objects>
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="Rt3-la-JTM" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="DVD" id="NQM-tj-e0d"/>
+                    <tabBarItem key="tabBarItem" title="DVD" image="dvdtab" id="NQM-tj-e0d"/>
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="alV-5L-0p0">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
@@ -241,4 +242,8 @@
             <point key="canvasLocation" x="694" y="1013"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="dvdtab" width="32" height="32"/>
+        <image name="movietab" width="20" height="25"/>
+    </resources>
 </document>

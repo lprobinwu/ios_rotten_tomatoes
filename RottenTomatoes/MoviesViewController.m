@@ -12,7 +12,10 @@
 #import "UIImageView+AFNetworking.h"
 #import "JTProgressHUD.h"
 
-@interface MoviesViewController () <UITableViewDataSource, UITableViewDelegate>
+@interface MoviesViewController () <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate>
+{
+    BOOL isSearch;
+}
 
 @end
 
@@ -28,6 +31,7 @@
     
     self.tableView.dataSource= self;
     self.tableView.delegate = self;
+    self.searchBar.delegate = self;
     
     // User sees loading state while waiting for movies API
     [JTProgressHUD showWithStyle:NO];
@@ -46,6 +50,8 @@
 }
 
 - (void)onRefresh {
+    [self.searchBar resignFirstResponder];
+    
     NSString *urlString =
     @"https://gist.githubusercontent.com/timothy1ee/d1778ca5b944ed974db0/raw/489d812c7ceeec0ac15ab77bf7c47849f2d1eb2b/gistfile1.json";
     
@@ -92,10 +98,13 @@
                                                     [JTProgressHUD hide];
                                                     
                                                     [self.tableView reloadData];
+                                                    self.searchResult = [NSMutableArray arrayWithCapacity:[self.movies count]];
+                                                    
                                                 } else {
                                                     NSLog(@"An error occurred: %@", error.description);
                                                     
                                                     [JTProgressHUD hide];
+                                                    self.searchBar.hidden = YES;
                                                     
                                                     [self showNetworkError];
                                                 }
@@ -105,7 +114,11 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return self.movies.count;
+    if (isSearch) {
+        return self.searchResult.count;
+    } else {
+        return self.movies.count;
+    }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -117,10 +130,19 @@
         cell = (MoviesTableViewCell *)[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
     }
     
-    cell.titleLabel.text = self.movies[indexPath.row][@"title"];
-    cell.synopsisLabel.text = self.movies[indexPath.row][@"synopsis"];
+    NSDictionary *movie;
+    if (isSearch) {
+        if (self.searchResult.count > indexPath.row) {
+            movie = self.searchResult[indexPath.row];
+        }
+    } else {
+        movie = self.movies[indexPath.row];
+    }
     
-    NSString *originalUrlString = self.movies[indexPath.row][@"posters"][@"thumbnail"];
+    cell.titleLabel.text = movie[@"title"];
+    cell.synopsisLabel.text = movie[@"synopsis"];
+    
+    NSString *originalUrlString = movie[@"posters"][@"thumbnail"];
     NSRange range = [originalUrlString rangeOfString:@".*cloudfront.net/"
                                              options:NSRegularExpressionSearch];
     NSString *newUrlString = [originalUrlString stringByReplacingCharactersInRange:range
@@ -138,13 +160,37 @@
     [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
+    
+    if([searchText isEqualToString:@""] || searchText==nil) {
+        isSearch = NO;
+        [self.tableView reloadData];
+        return;
+    }
+    isSearch = YES;
+    [self.searchResult removeAllObjects];
+    NSPredicate *resultPredicate = [NSPredicate predicateWithFormat:@"title contains[c] %@", searchText];
+    
+    self.searchResult = [NSMutableArray arrayWithArray: [self.movies filteredArrayUsingPredicate:resultPredicate]];
+    [self.tableView reloadData];
+}
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
+    [self.searchBar resignFirstResponder];
+}
+
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     NSLog(@"prepareForSegue is called");
     
     MoviesTableViewCell *cell = (MoviesTableViewCell *) sender;
     NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
     
-    NSDictionary *movie = self.movies[indexPath.row];
+    NSDictionary *movie;
+    if (isSearch) {
+        movie = self.searchResult[indexPath.row];
+    } else {
+        movie = self.movies[indexPath.row];
+    }
     
     MovieDetailsViewController *destViewController = (MovieDetailsViewController *) segue.destinationViewController;
     destViewController.movie = movie;
